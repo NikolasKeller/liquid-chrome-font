@@ -24,6 +24,23 @@
   font-display: swap;
 }
 
+/* Color bitmap font: the real chrome renders embedded as sbix strikes.
+ * No CSS effect needed — the texture is in the font itself. */
+@font-face {
+  font-family: "Liquid Chrome Color";
+  src:
+    url("../fonts/LiquidChrome-Color.woff2") format("woff2"),
+    url("../fonts/LiquidChrome-Color.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+.liquid-chrome-color {
+  font-family: "Liquid Chrome Color", "Liquid Chrome", system-ui, sans-serif;
+  font-weight: 400;
+}
+
 .liquid-chrome {
   font-family: "Liquid Chrome", system-ui, sans-serif;
   font-weight: 400;

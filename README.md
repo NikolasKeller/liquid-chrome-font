@@ -4,10 +4,16 @@ An open-source liquid-chrome lettering kit: glossy, molten-silver letterforms
 inspired by 90s/Y2K chrome type. The look is captured in two complementary
 ways so you can pick whatever fits your project:
 
-1. **PNG glyphs** (`glyphs/png/`) — pre-rendered chrome letters `a-z` and
+1. **Color font** (`fonts/LiquidChrome-Color.ttf`) — the real chrome renders
+   embedded in an installable font (Apple `sbix` color bitmaps). Type text in
+   Photoshop, Figma, macOS apps or the browser and get the pixel-perfect
+   chrome texture. Falls back to monochrome outlines where color fonts are
+   not supported.
+2. **PNG glyphs** (`glyphs/png/`) — pre-rendered chrome letters `a-z` and
    `0-9` with transparent backgrounds. Pixel-perfect, works on any backdrop.
-2. **Real font files** (`fonts/`) — installable `TTF` / `OTF` / `WOFF2` with
-   blobby rounded outlines, plus a CSS metallic effect for the web.
+3. **Outline font** (`fonts/LiquidChrome-Regular.*`) — lightweight
+   `TTF` / `OTF` / `WOFF2` traced from the same glyphs, plus a CSS metallic
+   effect for the web.
 
 | Reference (dark) | Reference (light) |
 | --- | --- |
@@ -70,7 +76,22 @@ lettering).
 
 ## Quick start
 
-### Option A — PNG glyphs (pixel-perfect chrome)
+### Option A — Color font (real chrome texture, just type)
+
+Double-click `fonts/LiquidChrome-Color.ttf` and press "Install Font". Select
+**Liquid Chrome Color** in any app with color-font support (macOS apps,
+Photoshop, Figma, Safari/Chrome) and type — every letter is one of the
+rendered chrome glyphs. On the web:
+
+```html
+<link rel="stylesheet" href="css/liquid-chrome.css">
+<h1 class="liquid-chrome-color">iykyk</h1>
+```
+
+Note: the embedded bitmaps make this file ~10 MB — use the PNG glyphs or the
+outline webfont when payload size matters.
+
+### Option B — PNG glyphs (pixel-perfect chrome)
 
 Every character is a transparent PNG in `glyphs/png/` (`a.png` … `z.png`,
 `0.png` … `9.png`). Compose words in any design tool, or use the bundled
@@ -94,12 +115,13 @@ In plain HTML:
 (Descenders like `g j p q y f` need a negative bottom margin; see the metrics
 table in `demo/composer.html`.)
 
-### Option B — Install the font
+### Option C — Outline font
 
 Double-click `fonts/LiquidChrome-Regular.otf` (or `.ttf`) and press
-"Install Font". The family is available as **Liquid Chrome**.
+"Install Font". The family is available as **Liquid Chrome** — the same
+letterforms as the chrome glyphs, as a lightweight monochrome font.
 
-### Option C — Webfont + CSS chrome effect
+### Option D — Outline webfont + CSS chrome effect
 
 ```html
 <link rel="stylesheet" href="css/liquid-chrome.css">
@@ -130,8 +152,11 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 # 1. Regenerate transparent glyphs from raw renders (glyphs/raw/)
 .venv/bin/python scripts/make_transparent.py
 
-# 2. Rebuild the font files from the PNG glyphs
+# 2. Rebuild the outline font files from the PNG glyphs
 .venv/bin/python scripts/build_font.py
+
+# 3. Rebuild the color font (embeds the PNGs as sbix bitmaps)
+.venv/bin/python scripts/build_color_font.py
 ```
 
 `scripts/build_font.py` builds the font directly from the chrome renders:
@@ -145,12 +170,13 @@ and WOFF2.
 ## Repository layout
 
 ```
-fonts/            LiquidChrome-Regular.ttf / .otf / .woff2
+fonts/            LiquidChrome-Color.ttf / .woff2 (chrome bitmaps),
+                  LiquidChrome-Regular.ttf / .otf / .woff2 (outlines)
 glyphs/png/       transparent chrome letters (a-z, 0-9)
 glyphs/raw/       original AI renders on black (build input)
 css/              @font-face + metallic gradient effect
 demo/             index.html (overview), composer.html (word builder)
-scripts/          make_transparent.py, build_font.py
+scripts/          make_transparent.py, build_font.py, build_color_font.py
 reference/        the two original reference images
 ```
 
