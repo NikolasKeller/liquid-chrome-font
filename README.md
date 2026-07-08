@@ -1,19 +1,22 @@
 # Liquid Chrome
 
 An open-source liquid-chrome lettering kit: glossy, molten-silver letterforms
-inspired by 90s/Y2K chrome type. The look is captured in two complementary
-ways so you can pick whatever fits your project:
+inspired by 90s/Y2K chrome type.
+
+![Liquid Chrome Color font — real chrome texture, just type](assets/preview-color-font.png)
+
+The look is captured in three complementary ways so you can pick whatever
+fits your project:
 
 1. **Color font** (`fonts/LiquidChrome-Color.ttf`) — the real chrome renders
    embedded in an installable font (Apple `sbix` color bitmaps). Type text in
    Photoshop, Figma, macOS apps or the browser and get the pixel-perfect
-   chrome texture. Falls back to monochrome outlines where color fonts are
-   not supported.
+   chrome texture (shown above). Falls back to monochrome outlines where
+   color fonts are not supported.
 2. **PNG glyphs** (`glyphs/png/`) — pre-rendered chrome letters `a-z` and
    `0-9` with transparent backgrounds. Pixel-perfect, works on any backdrop.
 3. **Outline font** (`fonts/LiquidChrome-Regular.*`) — lightweight
-   `TTF` / `OTF` / `WOFF2` traced from the same glyphs, plus a CSS metallic
-   effect for the web.
+   `TTF` / `OTF` / `WOFF2` traced from the same glyphs.
 
 | Reference (dark) | Reference (light) |
 | --- | --- |
@@ -121,29 +124,7 @@ Double-click `fonts/LiquidChrome-Regular.otf` (or `.ttf`) and press
 "Install Font". The family is available as **Liquid Chrome** — the same
 letterforms as the chrome glyphs, as a lightweight monochrome font.
 
-### Option D — Outline webfont + CSS chrome effect
-
-```html
-<link rel="stylesheet" href="css/liquid-chrome.css">
-
-<h1 class="liquid-chrome">iykyk</h1>                          <!-- dark bg -->
-<h1 class="liquid-chrome liquid-chrome--light">iykyk</h1>     <!-- light bg -->
-<h1 class="liquid-chrome liquid-chrome--animated">iykyk</h1>  <!-- shine sweep -->
-
-<!-- full molten look: add the gloss class ... -->
-<h1 class="liquid-chrome liquid-chrome--gloss">iykyk</h1>
-<!-- ...and paste the SVG filter defs from demo/index.html into your page -->
-```
-
-The CSS clips a molten-metal photo texture (`assets/chrome-texture.jpg`)
-blended over a chrome banding gradient into the glyphs via
-`background-clip: text`, so the letters carry real streaks and dark
-reflections. The optional `--gloss` class (plus the inline SVG filter from
-`demo/index.html`) adds specular lighting on top. Use `--gloss-small` for
-text below ~60px. For the exact look of the reference renders use the color
-font or the PNG glyphs.
-
-See both variants side by side: `demo/index.html`.
+See the color font and the PNG glyphs side by side: `demo/index.html`.
 
 ## Building it yourself
 
@@ -175,8 +156,8 @@ fonts/            LiquidChrome-Color.ttf / .woff2 (chrome bitmaps),
                   LiquidChrome-Regular.ttf / .otf / .woff2 (outlines)
 glyphs/png/       transparent chrome letters (a-z, 0-9)
 glyphs/raw/       original AI renders on black (build input)
-css/              @font-face + metallic texture/gradient effect
-assets/           chrome-texture.jpg (clipped into the CSS text effect)
+css/              @font-face declarations for both webfonts
+assets/           preview image (+ optional chrome texture for CSS effects)
 demo/             index.html (overview), composer.html (word builder)
 scripts/          make_transparent.py, build_font.py, build_color_font.py
 reference/        the two original reference images
