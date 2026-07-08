@@ -138,7 +138,8 @@ curl -sL -o "build/ShantellSans[BNCE,INFM,SPAC,wght].ttf" \
 
 `scripts/build_font.py` pins Shantell Sans at a light, fully informal,
 slightly bouncy instance (`wght 300, INFM 100, BNCE 32, SPAC 12`), subsets it
-to Latin, then grows every outline with a round-join stroke (skia-pathops)
+to Latin, condenses it horizontally (x0.82 — the reference lettering is tall
+and narrow), then grows every outline with a round-join stroke (skia-pathops)
 and merges it back into the fill — the thin hand-drawn skeleton swells into
 the organic droplet strokes of the reference lettering. Exports TTF, OTF and
 WOFF2.

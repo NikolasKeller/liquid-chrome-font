@@ -37,7 +37,9 @@ STYLE = "Regular"
 PS_NAME = "LiquidChrome-Regular"
 VERSION = "1.100"
 # Dilation radius in font units (Shantell Sans: 1000 upm).
-RADIUS = 45
+RADIUS = 30
+# Horizontal condensation: the reference lettering is tall and narrow.
+CONDENSE = 0.82
 # Axis pinning: light skeleton, fully informal shapes, a touch of bounce.
 AXES = {"wght": 300, "INFM": 100, "BNCE": 32, "SPAC": 12}
 
@@ -86,10 +88,17 @@ def main() -> None:
 
     for name in font.getGlyphOrder():
         advance, _lsb = hmtx[name]
-        path = skia_path_for_glyph(glyph_set, name)
+        condensed_advance = int(round(advance * CONDENSE))
+        raw = skia_path_for_glyph(glyph_set, name)
+        # Condense the skeleton before dilation so strokes stay round.
+        path = pathops.Path()
+        raw.draw(TransformPen(path.getPen(), (CONDENSE, 0, 0, 1, 0, 0)))
         if not list(path.segments):
             blob_paths[name] = path
-            new_metrics[name] = (advance + 2 * RADIUS if advance else advance, 0)
+            new_metrics[name] = (
+                condensed_advance + 2 * RADIUS if advance else condensed_advance,
+                0,
+            )
             continue
         blob = dilate(path, RADIUS)
         # Shift right by RADIUS so the left sidebearing is preserved and
@@ -98,7 +107,7 @@ def main() -> None:
         blob.draw(TransformPen(shifted.getPen(), (1, 0, 0, 1, RADIUS, 0)))
         blob_paths[name] = shifted
         bounds = shifted.bounds
-        new_metrics[name] = (advance + 2 * RADIUS, int(round(bounds[0])))
+        new_metrics[name] = (condensed_advance + 2 * RADIUS, int(round(bounds[0])))
 
     # --- TTF (quadratic outlines) ------------------------------------------
     for name, path in blob_paths.items():
