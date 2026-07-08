@@ -2,15 +2,15 @@
 """Build the Liquid Chrome font family from an OFL base font.
 
 Pipeline:
-  1. Download / load Shantell Sans (SIL OFL 1.1) and pin its variable axes at
-     a light, fully informal, slightly bouncy instance. The hand-drawn,
-     irregular letterforms match the casual look of the reference renders.
+  1. Download / load Mystery Quest (SIL OFL 1.1) — a wavy, psychedelic
+     display face whose irregular letterforms match the melted look of the
+     reference chrome packs.
   2. Subset to Basic Latin + Latin-1.
   3. Dilate every glyph outline with a round-join stroke (skia-pathops) and
-     merge it with the original fill. The thin skeleton swells into even,
-     rounded droplet strokes — corners and joints melt together organically.
+     merge it with the original fill. Corners, spurs and curls melt together
+     into fat organic blobs while the counters stay open.
   4. Export TTF, OTF and WOFF2 into fonts/ under the family name
-     "Liquid Chrome" (Shantell Sans' Reserved Font Name is not used).
+     "Liquid Chrome" (Mystery Quest's Reserved Font Name is not used).
 
 Usage:
   python scripts/build_font.py
@@ -28,26 +28,23 @@ from fontTools.pens.t2CharStringPen import T2CharStringPen
 from fontTools.pens.transformPen import TransformPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont
-from fontTools.varLib.instancer import instantiateVariableFont
 
-BASE_FONT = Path("build/ShantellSans[BNCE,INFM,SPAC,wght].ttf")
+BASE_FONT = Path("build/MysteryQuest.ttf")
 OUT_DIR = Path("fonts")
 FAMILY = "Liquid Chrome"
 STYLE = "Regular"
 PS_NAME = "LiquidChrome-Regular"
-VERSION = "1.100"
-# Dilation radius in font units (Shantell Sans: 1000 upm).
-RADIUS = 30
-# Horizontal condensation: the reference lettering is tall and narrow.
-CONDENSE = 0.82
-# Axis pinning: light skeleton, fully informal shapes, a touch of bounce.
-AXES = {"wght": 300, "INFM": 100, "BNCE": 32, "SPAC": 12}
+VERSION = "1.200"
+# Dilation radius in font units (Mystery Quest: 1024 upm). Fat enough to melt
+# the wavy details into blobs, small enough to keep the counters open.
+RADIUS = 68
+# No condensation: the reference blob lettering is wide and fat.
+CONDENSE = 1.0
 
 COPYRIGHT = (
-    "Liquid Chrome: derived from Shantell Sans, "
-    "Copyright 2022 The Shantell Sans Project Authors "
-    "(https://github.com/arrowtype/shantell-sans). "
-    "Licensed under the SIL Open Font License, Version 1.1."
+    "Liquid Chrome: derived from Mystery Quest, "
+    "Copyright 2012 Font Diner Inc, "
+    "licensed under the SIL Open Font License, Version 1.1."
 )
 
 UNICODES = "U+0020-007E,U+00A0-00FF"
@@ -73,7 +70,6 @@ def dilate(path: pathops.Path, radius: int) -> pathops.Path:
 
 def main() -> None:
     font = TTFont(BASE_FONT)
-    instantiateVariableFont(font, AXES, inplace=True)
 
     subsetter = subset.Subsetter(subset.Options(notdef_outline=True))
     subsetter.populate(unicodes=subset.parse_unicodes(UNICODES))

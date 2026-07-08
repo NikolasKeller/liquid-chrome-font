@@ -130,19 +130,17 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 # 1. Regenerate transparent glyphs from raw renders (glyphs/raw/)
 .venv/bin/python scripts/make_transparent.py
 
-# 2. Rebuild the font files (downloads Shantell Sans as the base skeleton)
-curl -sL -o "build/ShantellSans[BNCE,INFM,SPAC,wght].ttf" \
-  "https://github.com/google/fonts/raw/main/ofl/shantellsans/ShantellSans%5BBNCE%2CINFM%2CSPAC%2Cwght%5D.ttf"
+# 2. Rebuild the font files (downloads Mystery Quest as the base skeleton)
+curl -sL -o "build/MysteryQuest.ttf" \
+  "https://github.com/google/fonts/raw/main/ofl/mysteryquest/MysteryQuest-Regular.ttf"
 .venv/bin/python scripts/build_font.py
 ```
 
-`scripts/build_font.py` pins Shantell Sans at a light, fully informal,
-slightly bouncy instance (`wght 300, INFM 100, BNCE 32, SPAC 12`), subsets it
-to Latin, condenses it horizontally (x0.82 — the reference lettering is tall
-and narrow), then grows every outline with a round-join stroke (skia-pathops)
-and merges it back into the fill — the thin hand-drawn skeleton swells into
-the organic droplet strokes of the reference lettering. Exports TTF, OTF and
-WOFF2.
+`scripts/build_font.py` subsets Mystery Quest — a wavy, psychedelic display
+face — to Latin, then grows every outline with a fat round-join stroke
+(skia-pathops, radius 68/1024 upm) and merges it back into the fill. Curls,
+spurs and corners melt together into thick organic blobs while the counters
+stay open, matching the melted chrome-pack look. Exports TTF, OTF and WOFF2.
 
 ## Repository layout
 
@@ -160,9 +158,9 @@ reference/        the two original reference images
 
 - **Font files** (`fonts/`, `scripts/build_font.py` output): licensed under
   the [SIL Open Font License 1.1](LICENSE). Derived from
-  [Shantell Sans](https://github.com/arrowtype/shantell-sans), Copyright 2022
-  The Shantell Sans Project Authors. The name "Shantell Sans" is not used by
-  this project.
+  [Mystery Quest](https://fonts.google.com/specimen/Mystery+Quest),
+  Copyright 2012 Font Diner. "Mystery Quest" is a Reserved Font Name and is
+  not used by this project.
 - **PNG glyphs and reference images** (`glyphs/`, `reference/`): licensed
   under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) — use them
   anywhere, credit "Liquid Chrome contributors".
