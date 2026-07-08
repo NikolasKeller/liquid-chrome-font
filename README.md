@@ -135,12 +135,13 @@ letterforms as the chrome glyphs, as a lightweight monochrome font.
 <!-- ...and paste the SVG filter defs from demo/index.html into your page -->
 ```
 
-The CSS applies a multi-stop chrome gradient via `background-clip: text`.
-The optional `--gloss` class (plus the inline SVG filter from
-`demo/index.html`) adds specular lighting that shades every stroke like a
-rounded metal tube. Use `--gloss-small` for text below ~60px. It is still an
-approximation of the rendered chrome — for the exact look of the reference
-images use the PNG glyphs.
+The CSS clips a molten-metal photo texture (`assets/chrome-texture.jpg`)
+blended over a chrome banding gradient into the glyphs via
+`background-clip: text`, so the letters carry real streaks and dark
+reflections. The optional `--gloss` class (plus the inline SVG filter from
+`demo/index.html`) adds specular lighting on top. Use `--gloss-small` for
+text below ~60px. For the exact look of the reference renders use the color
+font or the PNG glyphs.
 
 See both variants side by side: `demo/index.html`.
 
@@ -174,7 +175,8 @@ fonts/            LiquidChrome-Color.ttf / .woff2 (chrome bitmaps),
                   LiquidChrome-Regular.ttf / .otf / .woff2 (outlines)
 glyphs/png/       transparent chrome letters (a-z, 0-9)
 glyphs/raw/       original AI renders on black (build input)
-css/              @font-face + metallic gradient effect
+css/              @font-face + metallic texture/gradient effect
+assets/           chrome-texture.jpg (clipped into the CSS text effect)
 demo/             index.html (overview), composer.html (word builder)
 scripts/          make_transparent.py, build_font.py, build_color_font.py
 reference/        the two original reference images
