@@ -112,11 +112,11 @@ In plain HTML:
 
 ```html
 <img src="glyphs/png/i.png" style="height: 120px" alt="i">
-<img src="glyphs/png/y.png" style="height: 156px; margin-bottom: -36px" alt="y">
+<img src="glyphs/png/y.png" style="height: 156px; margin-bottom: -5px" alt="y">
 ```
 
-(Descenders like `g j p q y f` need a negative bottom margin; see the metrics
-table in `demo/composer.html`.)
+(Descenders like `g j p q y` need a small negative bottom margin; see the
+metrics table in `demo/composer.html`.)
 
 ### Option C — Outline font
 
@@ -145,9 +145,15 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 the alpha channel of every PNG in `glyphs/png/` is cleaned up (morphological
 closing removes pinholes left by dark reflections) and traced to vector
 outlines with potrace, so the font has exactly the same letterforms as the
-pixel-perfect glyphs. Vertical placement uses the same hand-tuned metrics as
-the composer. `A-Z` maps onto the single-case `a-z` shapes. Exports TTF, OTF
-and WOFF2.
+pixel-perfect glyphs. Vertical placement is derived from the PNG masks
+themselves (`scripts/derive_metrics.py`): every glyph body rests on a common
+baseline, and descenders (`g j p q y`) dip below only as far as their
+measured tail. `A-Z` maps onto the single-case `a-z` shapes. Exports TTF,
+OTF and WOFF2.
+
+`scripts/build_color_font.py` embeds two `sbix` strikes: a 1000 ppem strike
+at the native render resolution and a contrast-boosted 200 ppem strike so
+the chrome stays punchy at body-text sizes.
 
 ## Repository layout
 

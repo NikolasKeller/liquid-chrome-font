@@ -94,23 +94,25 @@
 <main><div id="canvas"></div></main>
 <footer>Glyphs: glyphs/png/*.png &middot; lowercase a&ndash;z and 0&ndash;9 are available; other characters are skipped.</footer>
 <script>
-  // Vertical metrics per glyph, hand-tuned for the generated set.
+  // Vertical metrics per glyph — identical to scripts/build_font.py.
   // h: height relative to the base size, dy: shift below the baseline
-  // (fraction of base size) for descenders.
+  // (fraction of base size). dy is derived from the PNG alpha masks
+  // (scripts/derive_metrics.py): glyph bodies rest on the baseline,
+  // descenders (g j p q y) dip below only as far as their measured tail.
   const METRICS = {
     a: { h: 1.00, dy: 0.02 }, b: { h: 1.45, dy: 0.02 }, c: { h: 1.05, dy: 0.02 },
-    d: { h: 1.30, dy: 0.02 }, e: { h: 1.05, dy: 0.02 }, f: { h: 1.55, dy: 0.30 },
-    g: { h: 1.35, dy: 0.38 }, h: { h: 1.40, dy: 0.02 }, i: { h: 1.30, dy: 0.02 },
-    j: { h: 1.45, dy: 0.30 }, k: { h: 1.35, dy: 0.02 }, l: { h: 1.25, dy: 0.02 },
+    d: { h: 1.30, dy: 0.02 }, e: { h: 1.05, dy: 0.02 }, f: { h: 1.55, dy: 0.02 },
+    g: { h: 1.35, dy: 0.05 }, h: { h: 1.40, dy: 0.02 }, i: { h: 1.30, dy: 0.02 },
+    j: { h: 1.45, dy: 0.03 }, k: { h: 1.35, dy: 0.02 }, l: { h: 1.25, dy: 0.02 },
     m: { h: 1.00, dy: 0.02 }, n: { h: 1.00, dy: 0.02 }, o: { h: 1.05, dy: 0.02 },
-    p: { h: 1.30, dy: 0.35 }, q: { h: 1.30, dy: 0.35 }, r: { h: 1.05, dy: 0.02 },
-    s: { h: 1.10, dy: 0.02 }, t: { h: 1.40, dy: 0.15 }, u: { h: 1.00, dy: 0.02 },
+    p: { h: 1.30, dy: 0.14 }, q: { h: 1.30, dy: 0.06 }, r: { h: 1.05, dy: 0.02 },
+    s: { h: 1.10, dy: 0.02 }, t: { h: 1.40, dy: 0.02 }, u: { h: 1.00, dy: 0.02 },
     v: { h: 1.05, dy: 0.02 }, w: { h: 1.05, dy: 0.02 }, x: { h: 1.10, dy: 0.02 },
-    y: { h: 1.30, dy: 0.30 }, z: { h: 0.95, dy: 0.02 },
+    y: { h: 1.30, dy: 0.04 }, z: { h: 0.95, dy: 0.02 },
     0: { h: 1.35, dy: 0.02 }, 1: { h: 1.40, dy: 0.02 }, 2: { h: 1.35, dy: 0.02 },
     3: { h: 1.40, dy: 0.02 }, 4: { h: 1.45, dy: 0.02 }, 5: { h: 1.35, dy: 0.02 },
     6: { h: 1.40, dy: 0.02 }, 7: { h: 1.50, dy: 0.02 }, 8: { h: 1.40, dy: 0.02 },
-    9: { h: 1.45, dy: 0.15 }
+    9: { h: 1.45, dy: 0.02 }
   };
   const GLYPH_DIR = "../glyphs/png/";
 
