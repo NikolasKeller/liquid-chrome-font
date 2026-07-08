@@ -5,8 +5,13 @@
  *   <h1 class="liquid-chrome">iykyk</h1>            (on dark backgrounds)
  *   <h1 class="liquid-chrome liquid-chrome--light">iykyk</h1>  (on light backgrounds)
  *
- * The gradient approximates the molten-silver look of the reference renders.
- * For a pixel-perfect look use the PNG glyphs in glyphs/png/ instead.
+ * For the full molten-metal look add the SVG gloss filter (see
+ * demo/index.html): paste the inline <svg> filter defs into your page and add
+ * the class `liquid-chrome--gloss`. The specular highlights then follow the
+ * letterform surfaces instead of being a flat gradient.
+ *
+ * For a pixel-perfect match of the reference renders use the PNG glyphs in
+ * glyphs/png/ instead.
  */
 
 @font-face {
@@ -22,49 +27,69 @@
 .liquid-chrome {
   font-family: "Liquid Chrome", system-ui, sans-serif;
   font-weight: 400;
-  /* Multi-stop silver gradient: dark rim -> bright specular -> mid grey. */
+  /* Chrome banding: bright sky reflection on top, dark horizon line,
+   * lighter ground bounce below — classic liquid-metal read. */
   background-image: linear-gradient(
-    175deg,
-    #3d3d40 0%,
-    #f8f8fa 14%,
-    #ffffff 22%,
-    #9a9aa0 34%,
-    #5c5c62 46%,
-    #e8e8ec 58%,
-    #ffffff 66%,
-    #6e6e74 78%,
-    #2e2e31 90%,
-    #cfcfd4 100%
+    to bottom,
+    #eff0f3 0%,
+    #ffffff 10%,
+    #9fa0a6 24%,
+    #4c4d53 36%,
+    #141417 48%,
+    #3c3d43 56%,
+    #a7a8ae 66%,
+    #ffffff 76%,
+    #d7d8dc 84%,
+    #55565c 94%,
+    #212226 100%
   );
   background-size: 100% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
-  /* Soft glow lifts the letters off dark backgrounds like the reference. */
+  /* Lift the letters off dark backgrounds like the reference renders. */
   filter:
-    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.35))
-    drop-shadow(0 4px 14px rgba(0, 0, 0, 0.55));
+    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.28))
+    drop-shadow(0 6px 18px rgba(0, 0, 0, 0.6));
 }
 
-/* Variant tuned for light / cream backgrounds. */
+/* Variant tuned for light / cream backgrounds: deeper darks, harder rim. */
 .liquid-chrome--light {
   background-image: linear-gradient(
-    175deg,
-    #1f1f22 0%,
-    #e9e9ee 12%,
+    to bottom,
+    #6f7076 0%,
+    #f4f5f7 12%,
     #ffffff 20%,
-    #7d7d84 34%,
-    #3a3a3e 48%,
-    #d6d6db 60%,
-    #ffffff 68%,
-    #55555b 82%,
-    #17171a 92%,
-    #a8a8ae 100%
+    #8b8c93 32%,
+    #3a3b41 42%,
+    #0c0c0f 50%,
+    #2e2f35 58%,
+    #808187 68%,
+    #e4e5e9 80%,
+    #ffffff 88%,
+    #3f4046 100%
   );
   filter:
-    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.8))
-    drop-shadow(0 3px 10px rgba(0, 0, 0, 0.35));
+    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.9))
+    drop-shadow(0 4px 12px rgba(0, 0, 0, 0.35));
+}
+
+/* Molten gloss: requires the inline SVG filter defs from demo/index.html
+ * (ids: liquid-chrome-gloss / liquid-chrome-gloss-small) somewhere in the
+ * document. The specular pass shades each stroke like a rounded metal tube,
+ * which is what makes the effect read as liquid chrome instead of a flat
+ * gradient. Use -small for text below ~60px. */
+.liquid-chrome--gloss {
+  filter:
+    url(#liquid-chrome-gloss)
+    drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55));
+}
+
+.liquid-chrome--gloss-small {
+  filter:
+    url(#liquid-chrome-gloss-small)
+    drop-shadow(0 3px 10px rgba(0, 0, 0, 0.5));
 }
 
 /* Optional: subtle shine sweep animation. */

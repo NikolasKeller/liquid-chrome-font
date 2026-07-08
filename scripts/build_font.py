@@ -2,13 +2,15 @@
 """Build the Liquid Chrome font family from an OFL base font.
 
 Pipeline:
-  1. Download / load Comfortaa (SIL OFL 1.1), pin the weight axis at Bold.
+  1. Download / load Shantell Sans (SIL OFL 1.1) and pin its variable axes at
+     a light, fully informal, slightly bouncy instance. The hand-drawn,
+     irregular letterforms match the casual look of the reference renders.
   2. Subset to Basic Latin + Latin-1.
   3. Dilate every glyph outline with a round-join stroke (skia-pathops) and
-     merge it with the original fill. This melts corners and joints into the
-     organic droplet look of the reference images.
+     merge it with the original fill. The thin skeleton swells into even,
+     rounded droplet strokes — corners and joints melt together organically.
   4. Export TTF, OTF and WOFF2 into fonts/ under the family name
-     "Liquid Chrome" (Comfortaa's Reserved Font Name is not used).
+     "Liquid Chrome" (Shantell Sans' Reserved Font Name is not used).
 
 Usage:
   python scripts/build_font.py
@@ -28,21 +30,21 @@ from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont
 from fontTools.varLib.instancer import instantiateVariableFont
 
-BASE_FONT = Path("build/Comfortaa[wght].ttf")
+BASE_FONT = Path("build/ShantellSans[BNCE,INFM,SPAC,wght].ttf")
 OUT_DIR = Path("fonts")
 FAMILY = "Liquid Chrome"
 STYLE = "Regular"
 PS_NAME = "LiquidChrome-Regular"
-VERSION = "1.000"
-# Dilation radius in font units (Comfortaa: 1000 upm).
-RADIUS = 50
-# Weight-axis position used as the skeleton before dilation.
-BASE_WEIGHT = 700
+VERSION = "1.100"
+# Dilation radius in font units (Shantell Sans: 1000 upm).
+RADIUS = 45
+# Axis pinning: light skeleton, fully informal shapes, a touch of bounce.
+AXES = {"wght": 300, "INFM": 100, "BNCE": 32, "SPAC": 12}
 
 COPYRIGHT = (
-    "Liquid Chrome: derived from Comfortaa, "
-    "Copyright 2011 The Comfortaa Project Authors "
-    "(https://github.com/googlefonts/comfortaa). "
+    "Liquid Chrome: derived from Shantell Sans, "
+    "Copyright 2022 The Shantell Sans Project Authors "
+    "(https://github.com/arrowtype/shantell-sans). "
     "Licensed under the SIL Open Font License, Version 1.1."
 )
 
@@ -69,7 +71,7 @@ def dilate(path: pathops.Path, radius: int) -> pathops.Path:
 
 def main() -> None:
     font = TTFont(BASE_FONT)
-    instantiateVariableFont(font, {"wght": BASE_WEIGHT}, inplace=True)
+    instantiateVariableFont(font, AXES, inplace=True)
 
     subsetter = subset.Subsetter(subset.Options(notdef_outline=True))
     subsetter.populate(unicodes=subset.parse_unicodes(UNICODES))
@@ -129,7 +131,7 @@ def main() -> None:
         (17, STYLE),
     ):
         name_table.setName(value, name_id, 3, 1, 0x409)
-    # Drop stale records (mac platform, designer URLs referencing Comfortaa).
+    # Drop stale records (mac platform, designer URLs referencing the base font).
     name_table.removeNames(platformID=1)
     for nid in (7, 8, 9, 11, 12, 13, 14):
         name_table.removeNames(nameID=nid)

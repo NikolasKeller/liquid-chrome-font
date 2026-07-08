@@ -13,6 +13,61 @@ ways so you can pick whatever fits your project:
 | --- | --- |
 | ![dark](reference/iykyk-black.png) | ![light](reference/iykyk-cream.png) |
 
+## Glyph set
+
+All 36 pre-rendered chrome glyphs from `glyphs/png/` (transparent backgrounds,
+shown here on GitHub's page background):
+
+<table>
+  <tr>
+    <td align="center"><img src="glyphs/png/a.png" width="56" alt="a"><br>a</td>
+    <td align="center"><img src="glyphs/png/b.png" width="56" alt="b"><br>b</td>
+    <td align="center"><img src="glyphs/png/c.png" width="56" alt="c"><br>c</td>
+    <td align="center"><img src="glyphs/png/d.png" width="56" alt="d"><br>d</td>
+    <td align="center"><img src="glyphs/png/e.png" width="56" alt="e"><br>e</td>
+    <td align="center"><img src="glyphs/png/f.png" width="56" alt="f"><br>f</td>
+    <td align="center"><img src="glyphs/png/g.png" width="56" alt="g"><br>g</td>
+    <td align="center"><img src="glyphs/png/h.png" width="56" alt="h"><br>h</td>
+    <td align="center"><img src="glyphs/png/i.png" width="56" alt="i"><br>i</td>
+  </tr>
+  <tr>
+    <td align="center"><img src="glyphs/png/j.png" width="56" alt="j"><br>j</td>
+    <td align="center"><img src="glyphs/png/k.png" width="56" alt="k"><br>k</td>
+    <td align="center"><img src="glyphs/png/l.png" width="56" alt="l"><br>l</td>
+    <td align="center"><img src="glyphs/png/m.png" width="56" alt="m"><br>m</td>
+    <td align="center"><img src="glyphs/png/n.png" width="56" alt="n"><br>n</td>
+    <td align="center"><img src="glyphs/png/o.png" width="56" alt="o"><br>o</td>
+    <td align="center"><img src="glyphs/png/p.png" width="56" alt="p"><br>p</td>
+    <td align="center"><img src="glyphs/png/q.png" width="56" alt="q"><br>q</td>
+    <td align="center"><img src="glyphs/png/r.png" width="56" alt="r"><br>r</td>
+  </tr>
+  <tr>
+    <td align="center"><img src="glyphs/png/s.png" width="56" alt="s"><br>s</td>
+    <td align="center"><img src="glyphs/png/t.png" width="56" alt="t"><br>t</td>
+    <td align="center"><img src="glyphs/png/u.png" width="56" alt="u"><br>u</td>
+    <td align="center"><img src="glyphs/png/v.png" width="56" alt="v"><br>v</td>
+    <td align="center"><img src="glyphs/png/w.png" width="56" alt="w"><br>w</td>
+    <td align="center"><img src="glyphs/png/x.png" width="56" alt="x"><br>x</td>
+    <td align="center"><img src="glyphs/png/y.png" width="56" alt="y"><br>y</td>
+    <td align="center"><img src="glyphs/png/z.png" width="56" alt="z"><br>z</td>
+    <td align="center"><img src="glyphs/png/0.png" width="56" alt="0"><br>0</td>
+  </tr>
+  <tr>
+    <td align="center"><img src="glyphs/png/1.png" width="56" alt="1"><br>1</td>
+    <td align="center"><img src="glyphs/png/2.png" width="56" alt="2"><br>2</td>
+    <td align="center"><img src="glyphs/png/3.png" width="56" alt="3"><br>3</td>
+    <td align="center"><img src="glyphs/png/4.png" width="56" alt="4"><br>4</td>
+    <td align="center"><img src="glyphs/png/5.png" width="56" alt="5"><br>5</td>
+    <td align="center"><img src="glyphs/png/6.png" width="56" alt="6"><br>6</td>
+    <td align="center"><img src="glyphs/png/7.png" width="56" alt="7"><br>7</td>
+    <td align="center"><img src="glyphs/png/8.png" width="56" alt="8"><br>8</td>
+    <td align="center"><img src="glyphs/png/9.png" width="56" alt="9"><br>9</td>
+  </tr>
+</table>
+
+Uppercase input maps to the same lowercase-style glyphs (as in the reference
+lettering).
+
 ## Quick start
 
 ### Option A — PNG glyphs (pixel-perfect chrome)
@@ -52,11 +107,18 @@ Double-click `fonts/LiquidChrome-Regular.otf` (or `.ttf`) and press
 <h1 class="liquid-chrome">iykyk</h1>                          <!-- dark bg -->
 <h1 class="liquid-chrome liquid-chrome--light">iykyk</h1>     <!-- light bg -->
 <h1 class="liquid-chrome liquid-chrome--animated">iykyk</h1>  <!-- shine sweep -->
+
+<!-- full molten look: add the gloss class ... -->
+<h1 class="liquid-chrome liquid-chrome--gloss">iykyk</h1>
+<!-- ...and paste the SVG filter defs from demo/index.html into your page -->
 ```
 
-The CSS applies a multi-stop silver gradient via `background-clip: text`.
-It is an approximation of the rendered chrome — for the exact look of the
-reference images use the PNG glyphs.
+The CSS applies a multi-stop chrome gradient via `background-clip: text`.
+The optional `--gloss` class (plus the inline SVG filter from
+`demo/index.html`) adds specular lighting that shades every stroke like a
+rounded metal tube. Use `--gloss-small` for text below ~60px. It is still an
+approximation of the rendered chrome — for the exact look of the reference
+images use the PNG glyphs.
 
 See both variants side by side: `demo/index.html`.
 
@@ -68,16 +130,18 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 # 1. Regenerate transparent glyphs from raw renders (glyphs/raw/)
 .venv/bin/python scripts/make_transparent.py
 
-# 2. Rebuild the font files (downloads Comfortaa as the base skeleton)
-curl -sL -o "build/Comfortaa[wght].ttf" \
-  "https://github.com/google/fonts/raw/main/ofl/comfortaa/Comfortaa%5Bwght%5D.ttf"
+# 2. Rebuild the font files (downloads Shantell Sans as the base skeleton)
+curl -sL -o "build/ShantellSans[BNCE,INFM,SPAC,wght].ttf" \
+  "https://github.com/google/fonts/raw/main/ofl/shantellsans/ShantellSans%5BBNCE%2CINFM%2CSPAC%2Cwght%5D.ttf"
 .venv/bin/python scripts/build_font.py
 ```
 
-`scripts/build_font.py` pins Comfortaa Bold, subsets it to Latin, then grows
-every outline with a round-join stroke (skia-pathops) and merges it back into
-the fill — corners and joints melt into the organic droplet look. Exports
-TTF, OTF and WOFF2.
+`scripts/build_font.py` pins Shantell Sans at a light, fully informal,
+slightly bouncy instance (`wght 300, INFM 100, BNCE 32, SPAC 12`), subsets it
+to Latin, then grows every outline with a round-join stroke (skia-pathops)
+and merges it back into the fill — the thin hand-drawn skeleton swells into
+the organic droplet strokes of the reference lettering. Exports TTF, OTF and
+WOFF2.
 
 ## Repository layout
 
@@ -95,9 +159,9 @@ reference/        the two original reference images
 
 - **Font files** (`fonts/`, `scripts/build_font.py` output): licensed under
   the [SIL Open Font License 1.1](LICENSE). Derived from
-  [Comfortaa](https://github.com/googlefonts/comfortaa), Copyright 2011 The
-  Comfortaa Project Authors. "Comfortaa" is a Reserved Font Name and is not
-  used by this project.
+  [Shantell Sans](https://github.com/arrowtype/shantell-sans), Copyright 2022
+  The Shantell Sans Project Authors. The name "Shantell Sans" is not used by
+  this project.
 - **PNG glyphs and reference images** (`glyphs/`, `reference/`): licensed
   under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) — use them
   anywhere, credit "Liquid Chrome contributors".
