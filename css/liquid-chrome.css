@@ -1,0 +1,80 @@
+/* Liquid Chrome — webfont + metallic text effect.
+ *
+ * Usage:
+ *   <link rel="stylesheet" href="css/liquid-chrome.css">
+ *   <h1 class="liquid-chrome">iykyk</h1>            (on dark backgrounds)
+ *   <h1 class="liquid-chrome liquid-chrome--light">iykyk</h1>  (on light backgrounds)
+ *
+ * The gradient approximates the molten-silver look of the reference renders.
+ * For a pixel-perfect look use the PNG glyphs in glyphs/png/ instead.
+ */
+
+@font-face {
+  font-family: "Liquid Chrome";
+  src:
+    url("../fonts/LiquidChrome-Regular.woff2") format("woff2"),
+    url("../fonts/LiquidChrome-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+.liquid-chrome {
+  font-family: "Liquid Chrome", system-ui, sans-serif;
+  font-weight: 400;
+  /* Multi-stop silver gradient: dark rim -> bright specular -> mid grey. */
+  background-image: linear-gradient(
+    175deg,
+    #3d3d40 0%,
+    #f8f8fa 14%,
+    #ffffff 22%,
+    #9a9aa0 34%,
+    #5c5c62 46%,
+    #e8e8ec 58%,
+    #ffffff 66%,
+    #6e6e74 78%,
+    #2e2e31 90%,
+    #cfcfd4 100%
+  );
+  background-size: 100% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  /* Soft glow lifts the letters off dark backgrounds like the reference. */
+  filter:
+    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.35))
+    drop-shadow(0 4px 14px rgba(0, 0, 0, 0.55));
+}
+
+/* Variant tuned for light / cream backgrounds. */
+.liquid-chrome--light {
+  background-image: linear-gradient(
+    175deg,
+    #1f1f22 0%,
+    #e9e9ee 12%,
+    #ffffff 20%,
+    #7d7d84 34%,
+    #3a3a3e 48%,
+    #d6d6db 60%,
+    #ffffff 68%,
+    #55555b 82%,
+    #17171a 92%,
+    #a8a8ae 100%
+  );
+  filter:
+    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.8))
+    drop-shadow(0 3px 10px rgba(0, 0, 0, 0.35));
+}
+
+/* Optional: subtle shine sweep animation. */
+@keyframes liquid-chrome-shine {
+  0%   { background-position: 0% 0%; }
+  50%  { background-position: 0% 100%; }
+  100% { background-position: 0% 0%; }
+}
+
+.liquid-chrome--animated {
+  background-size: 100% 220%;
+  animation: liquid-chrome-shine 6s ease-in-out infinite;
+}
