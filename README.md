@@ -130,17 +130,17 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 # 1. Regenerate transparent glyphs from raw renders (glyphs/raw/)
 .venv/bin/python scripts/make_transparent.py
 
-# 2. Rebuild the font files (downloads Mystery Quest as the base skeleton)
-curl -sL -o "build/MysteryQuest.ttf" \
-  "https://github.com/google/fonts/raw/main/ofl/mysteryquest/MysteryQuest-Regular.ttf"
+# 2. Rebuild the font files from the PNG glyphs
 .venv/bin/python scripts/build_font.py
 ```
 
-`scripts/build_font.py` subsets Mystery Quest — a wavy, psychedelic display
-face — to Latin, then grows every outline with a fat round-join stroke
-(skia-pathops, radius 68/1024 upm) and merges it back into the fill. Curls,
-spurs and corners melt together into thick organic blobs while the counters
-stay open, matching the melted chrome-pack look. Exports TTF, OTF and WOFF2.
+`scripts/build_font.py` builds the font directly from the chrome renders:
+the alpha channel of every PNG in `glyphs/png/` is cleaned up (morphological
+closing removes pinholes left by dark reflections) and traced to vector
+outlines with potrace, so the font has exactly the same letterforms as the
+pixel-perfect glyphs. Vertical placement uses the same hand-tuned metrics as
+the composer. `A-Z` maps onto the single-case `a-z` shapes. Exports TTF, OTF
+and WOFF2.
 
 ## Repository layout
 
@@ -157,10 +157,8 @@ reference/        the two original reference images
 ## Licensing
 
 - **Font files** (`fonts/`, `scripts/build_font.py` output): licensed under
-  the [SIL Open Font License 1.1](LICENSE). Derived from
-  [Mystery Quest](https://fonts.google.com/specimen/Mystery+Quest),
-  Copyright 2012 Font Diner. "Mystery Quest" is a Reserved Font Name and is
-  not used by this project.
+  the [SIL Open Font License 1.1](LICENSE). The letterforms are traced from
+  this project's own rendered chrome glyphs — no third-party font is used.
 - **PNG glyphs and reference images** (`glyphs/`, `reference/`): licensed
   under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) — use them
   anywhere, credit "Liquid Chrome contributors".

@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-"""Build the Liquid Chrome font family from an OFL base font.
+"""Build the Liquid Chrome font family from the chrome PNG glyphs.
+
+The letterforms come straight from the rendered chrome glyphs in glyphs/png/:
+the alpha channel of every PNG is traced to vector outlines (potrace), so the
+font has exactly the same shapes as the pixel-perfect chrome renders.
 
 Pipeline:
-  1. Download / load Mystery Quest (SIL OFL 1.1) — a wavy, psychedelic
-     display face whose irregular letterforms match the melted look of the
-     reference chrome packs.
-  2. Subset to Basic Latin + Latin-1.
-  3. Dilate every glyph outline with a round-join stroke (skia-pathops) and
-     merge it with the original fill. Corners, spurs and curls melt together
-     into fat organic blobs while the counters stay open.
-  4. Export TTF, OTF and WOFF2 into fonts/ under the family name
-     "Liquid Chrome" (Mystery Quest's Reserved Font Name is not used).
+  1. Load glyphs/png/<char>.png (a-z, 0-9), threshold the alpha channel.
+  2. Trace the silhouette with potrace into smooth cubic outlines.
+  3. Scale/position each glyph using the same hand-tuned vertical metrics the
+     PNG composer uses (height + descender shift relative to the 'a' height).
+  4. Map A-Z onto the a-z glyphs (the chrome set is single-case).
+  5. Export TTF, OTF and WOFF2 into fonts/ as "Liquid Chrome".
 
 Usage:
   python scripts/build_font.py
@@ -20,167 +21,159 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import numpy as np
 import pathops
-from fontTools import subset
+import potrace
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.cu2quPen import Cu2QuPen
 from fontTools.pens.t2CharStringPen import T2CharStringPen
-from fontTools.pens.transformPen import TransformPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont
+from PIL import Image, ImageFilter
 
-BASE_FONT = Path("build/MysteryQuest.ttf")
+GLYPH_DIR = Path("glyphs/png")
 OUT_DIR = Path("fonts")
 FAMILY = "Liquid Chrome"
 STYLE = "Regular"
 PS_NAME = "LiquidChrome-Regular"
-VERSION = "1.200"
-# Dilation radius in font units (Mystery Quest: 1024 upm). Fat enough to melt
-# the wavy details into blobs, small enough to keep the counters open.
-RADIUS = 68
-# No condensation: the reference blob lettering is wide and fat.
-CONDENSE = 1.0
+VERSION = "2.000"
+UPM = 1000
+
+# Font units for a glyph with metric h=1.0 (the 'a' height).
+BASE = 520
+# Side bearing in font units on each side of a glyph.
+SIDE_BEARING = 26
+ALPHA_THRESHOLD = 96
 
 COPYRIGHT = (
-    "Liquid Chrome: derived from Mystery Quest, "
-    "Copyright 2012 Font Diner Inc, "
-    "licensed under the SIL Open Font License, Version 1.1."
+    "Liquid Chrome, Copyright 2026 The Liquid Chrome Project Authors. "
+    "Letterforms traced from the project's rendered chrome glyphs. "
+    "Licensed under the SIL Open Font License, Version 1.1."
 )
 
-UNICODES = "U+0020-007E,U+00A0-00FF"
+# Vertical metrics per glyph — identical to demo/composer.html.
+# h: glyph height relative to BASE, dy: shift below the baseline.
+METRICS = {
+    "a": (1.00, 0.02), "b": (1.45, 0.02), "c": (1.05, 0.02),
+    "d": (1.30, 0.02), "e": (1.05, 0.02), "f": (1.55, 0.30),
+    "g": (1.35, 0.38), "h": (1.40, 0.02), "i": (1.30, 0.02),
+    "j": (1.45, 0.30), "k": (1.35, 0.02), "l": (1.25, 0.02),
+    "m": (1.00, 0.02), "n": (1.00, 0.02), "o": (1.05, 0.02),
+    "p": (1.30, 0.35), "q": (1.30, 0.35), "r": (1.05, 0.02),
+    "s": (1.10, 0.02), "t": (1.40, 0.15), "u": (1.00, 0.02),
+    "v": (1.05, 0.02), "w": (1.05, 0.02), "x": (1.10, 0.02),
+    "y": (1.30, 0.30), "z": (0.95, 0.02),
+    "0": (1.35, 0.02), "1": (1.40, 0.02), "2": (1.35, 0.02),
+    "3": (1.40, 0.02), "4": (1.45, 0.02), "5": (1.35, 0.02),
+    "6": (1.40, 0.02), "7": (1.50, 0.02), "8": (1.40, 0.02),
+    "9": (1.45, 0.15),
+}
 
 
-def skia_path_for_glyph(glyph_set, name: str) -> pathops.Path:
+def trace_glyph(char: str) -> tuple[pathops.Path, int]:
+    """Trace one PNG glyph. Returns (outline in font units, advance width)."""
+    img = Image.open(GLYPH_DIR / f"{char}.png").convert("RGBA")
+    alpha = Image.fromarray(np.array(img)[:, :, 3])
+    # Dark chrome reflections leave pinholes and edge notches in the keyed
+    # alpha. Clean up: soft threshold, generous morphological closing, then a
+    # final blur+threshold to round the repaired boundary.
+    mask_img = alpha.filter(ImageFilter.GaussianBlur(2))
+    mask_img = mask_img.point(lambda p: 255 if p > 40 else 0)
+    mask_img = mask_img.filter(ImageFilter.MaxFilter(15)).filter(ImageFilter.MinFilter(15))
+    mask_img = mask_img.filter(ImageFilter.GaussianBlur(3))
+    mask_img = mask_img.point(lambda p: 255 if p > 128 else 0)
+    mask = np.array(mask_img) > 0
+
+    h_rel, dy_rel = METRICS[char]
+    height_units = h_rel * BASE
+    scale = height_units / mask.shape[0]
+    bottom = -dy_rel * BASE  # baseline shift of the bitmap's bottom edge
+    top = bottom + height_units
+
+    # potracer traces zero-valued pixels, hence the inversion.
+    bmp = potrace.Bitmap(~mask)
+    traced = bmp.trace(turdsize=250, alphamax=1.0, opticurve=1, opttolerance=0.2)
+
+    def to_units(pt) -> tuple[float, float]:
+        return (pt.x * scale + SIDE_BEARING, top - pt.y * scale)
+
+    def signed_area(curve) -> float:
+        pts = [curve.start_point] + [seg.end_point for seg in curve]
+        area = 0.0
+        for i, p in enumerate(pts):
+            q = pts[(i + 1) % len(pts)]
+            area += p.x * q.y - q.x * p.y
+        return area / 2
+
+    areas = [signed_area(c) for c in traced]
+    outer_sign = 1 if max(areas, key=abs) > 0 else -1
+    # Pinholes left by dark reflections are dropped: tiny outer islands and
+    # small interior holes. Real counters are much larger than the holes.
+    min_outer = (mask.shape[0] * 0.055) ** 2
+    min_hole = (mask.shape[0] * 0.10) ** 2
+
     path = pathops.Path()
-    glyph_set[name].draw(path.getPen(glyphSet=glyph_set))
-    return path
+    pen = path.getPen()
+    for curve, area in zip(traced, areas):
+        is_outer = (area > 0) == (outer_sign > 0)
+        if abs(area) < (min_outer if is_outer else min_hole):
+            continue
+        pen.moveTo(to_units(curve.start_point))
+        for seg in curve:
+            if seg.is_corner:
+                pen.lineTo(to_units(seg.c))
+                pen.lineTo(to_units(seg.end_point))
+            else:
+                pen.curveTo(
+                    to_units(seg.c1), to_units(seg.c2), to_units(seg.end_point)
+                )
+        pen.closePath()
+    path.simplify()
 
-
-def dilate(path: pathops.Path, radius: int) -> pathops.Path:
-    """Return the outline of `path` grown by `radius` with round joints."""
-    if not list(path.segments):
-        return path
-    stroked = pathops.Path(path)
-    stroked.stroke(radius * 2, pathops.LineCap.ROUND_CAP, pathops.LineJoin.ROUND_JOIN, 4)
-    stroked.convertConicsToQuads()
-    result = pathops.op(path, stroked, pathops.PathOp.UNION)
-    result.simplify()
-    return result
+    advance = int(round(mask.shape[1] * scale + 2 * SIDE_BEARING))
+    return path, advance
 
 
 def main() -> None:
-    font = TTFont(BASE_FONT)
+    glyph_paths: dict[str, pathops.Path] = {}
+    metrics: dict[str, tuple[int, int]] = {}
+    cmap: dict[int, str] = {}
 
-    subsetter = subset.Subsetter(subset.Options(notdef_outline=True))
-    subsetter.populate(unicodes=subset.parse_unicodes(UNICODES))
-    subsetter.subset(font)
+    glyph_order = [".notdef", "space"]
+    glyph_paths[".notdef"] = pathops.Path()
+    metrics[".notdef"] = (int(BASE * 0.6), 0)
+    glyph_paths["space"] = pathops.Path()
+    metrics["space"] = (int(BASE * 0.45), 0)
+    cmap[0x20] = "space"
+    cmap[0xA0] = "space"
 
-    glyph_set = font.getGlyphSet()
-    glyf = font["glyf"]
-    hmtx = font["hmtx"]
+    for char in METRICS:
+        name = f"uni{ord(char):04X}" if char.isdigit() else char
+        path, advance = trace_glyph(char)
+        glyph_paths[name] = path
+        bounds = path.bounds
+        metrics[name] = (advance, int(round(bounds[0])) if list(path.segments) else 0)
+        glyph_order.append(name)
+        cmap[ord(char)] = name
+        if char.isalpha():
+            # Single-case chrome set: uppercase input uses the same glyphs.
+            cmap[ord(char.upper())] = name
 
-    blob_paths: dict[str, pathops.Path] = {}
-    new_metrics: dict[str, tuple[int, int]] = {}
-
-    for name in font.getGlyphOrder():
-        advance, _lsb = hmtx[name]
-        condensed_advance = int(round(advance * CONDENSE))
-        raw = skia_path_for_glyph(glyph_set, name)
-        # Condense the skeleton before dilation so strokes stay round.
-        path = pathops.Path()
-        raw.draw(TransformPen(path.getPen(), (CONDENSE, 0, 0, 1, 0, 0)))
-        if not list(path.segments):
-            blob_paths[name] = path
-            new_metrics[name] = (
-                condensed_advance + 2 * RADIUS if advance else condensed_advance,
-                0,
-            )
-            continue
-        blob = dilate(path, RADIUS)
-        # Shift right by RADIUS so the left sidebearing is preserved and
-        # widen the advance to keep symmetric spacing.
-        shifted = pathops.Path()
-        blob.draw(TransformPen(shifted.getPen(), (1, 0, 0, 1, RADIUS, 0)))
-        blob_paths[name] = shifted
-        bounds = shifted.bounds
-        new_metrics[name] = (condensed_advance + 2 * RADIUS, int(round(bounds[0])))
+    ascent = int(max(p.bounds[3] for p in glyph_paths.values() if list(p.segments))) + 20
+    descent = int(min(p.bounds[1] for p in glyph_paths.values() if list(p.segments))) - 20
 
     # --- TTF (quadratic outlines) ------------------------------------------
-    for name, path in blob_paths.items():
-        pen = TTGlyphPen(None)
-        path.draw(Cu2QuPen(pen, 1.0))
-        glyf[name] = pen.glyph()
-        hmtx[name] = new_metrics[name]
-
-    # Give the swollen outlines vertical breathing room.
-    for table, attrs in (
-        ("hhea", ("ascent", "descent")),
-        ("OS/2", ("sTypoAscender", "sTypoDescender")),
-    ):
-        t = font[table]
-        setattr(t, attrs[0], getattr(t, attrs[0]) + RADIUS)
-        setattr(t, attrs[1], getattr(t, attrs[1]) - RADIUS)
-    font["OS/2"].usWinAscent += RADIUS
-    font["OS/2"].usWinDescent += RADIUS
-    font["OS/2"].usWeightClass = 400
-
-    name_table = font["name"]
-    for name_id, value in (
-        (0, COPYRIGHT),
-        (1, FAMILY),
-        (2, STYLE),
-        (3, f"{VERSION};{PS_NAME}"),
-        (4, f"{FAMILY} {STYLE}"),
-        (6, PS_NAME),
-        (16, FAMILY),
-        (17, STYLE),
-    ):
-        name_table.setName(value, name_id, 3, 1, 0x409)
-    # Drop stale records (mac platform, designer URLs referencing the base font).
-    name_table.removeNames(platformID=1)
-    for nid in (7, 8, 9, 11, 12, 13, 14):
-        name_table.removeNames(nameID=nid)
-    name_table.setName("SIL Open Font License, Version 1.1", 13, 3, 1, 0x409)
-    name_table.setName("https://openfontlicense.org", 14, 3, 1, 0x409)
-
-    if "DSIG" in font:
-        del font["DSIG"]
-
-    OUT_DIR.mkdir(exist_ok=True)
-    ttf_path = OUT_DIR / f"{PS_NAME}.ttf"
-    font.save(ttf_path)
-    print(f"wrote {ttf_path}")
-
-    woff2 = TTFont(ttf_path)
-    woff2.flavor = "woff2"
-    woff2_path = OUT_DIR / f"{PS_NAME}.woff2"
-    woff2.save(woff2_path)
-    print(f"wrote {woff2_path}")
-
-    # --- OTF (cubic/CFF outlines) ------------------------------------------
-    upm = font["head"].unitsPerEm
-    glyph_order = font.getGlyphOrder()
-    charstrings = {}
+    fb = FontBuilder(UPM, isTTF=True)
+    fb.setupGlyphOrder(glyph_order)
+    fb.setupCharacterMap(cmap)
+    ttf_glyphs = {}
     for name in glyph_order:
-        pen = T2CharStringPen(new_metrics[name][0], None)
-        # BasePen converts quadratic segments (incl. implied on-curve points)
-        # to cubics for the T2 charstring automatically.
-        blob_paths[name].draw(pen)
-        charstrings[name] = pen.getCharString()
-
-    fb = FontBuilder(upm, isTTF=False)
-    fb.setupGlyphOrder(list(glyph_order))
-    fb.setupCharacterMap(font.getBestCmap())
-    fb.setupCFF(
-        PS_NAME,
-        {"FullName": f"{FAMILY} {STYLE}", "FamilyName": FAMILY, "Weight": STYLE,
-         "Notice": COPYRIGHT},
-        charstrings,
-        {},
-    )
-    fb.setupHorizontalMetrics({g: new_metrics[g] for g in glyph_order})
-    hhea = font["hhea"]
-    fb.setupHorizontalHeader(ascent=hhea.ascent, descent=hhea.descent)
+        pen = TTGlyphPen(None)
+        glyph_paths[name].draw(Cu2QuPen(pen, 1.0))
+        ttf_glyphs[name] = pen.glyph()
+    fb.setupGlyf(ttf_glyphs)
+    fb.setupHorizontalMetrics(metrics)
+    fb.setupHorizontalHeader(ascent=ascent, descent=descent)
     fb.setupNameTable({
         "copyright": COPYRIGHT,
         "familyName": FAMILY,
@@ -192,14 +185,64 @@ def main() -> None:
         "licenseDescription": "SIL Open Font License, Version 1.1",
         "licenseInfoURL": "https://openfontlicense.org",
     })
-    os2 = font["OS/2"]
     fb.setupOS2(
-        sTypoAscender=os2.sTypoAscender,
-        sTypoDescender=os2.sTypoDescender,
-        usWinAscent=os2.usWinAscent,
-        usWinDescent=os2.usWinDescent,
-        sxHeight=os2.sxHeight,
-        sCapHeight=os2.sCapHeight,
+        sTypoAscender=ascent,
+        sTypoDescender=descent,
+        usWinAscent=ascent,
+        usWinDescent=-descent,
+        sxHeight=BASE,
+        sCapHeight=int(1.45 * BASE),
+        achVendID="LQCH",
+        usWeightClass=400,
+    )
+    fb.setupPost()
+    OUT_DIR.mkdir(exist_ok=True)
+    ttf_path = OUT_DIR / f"{PS_NAME}.ttf"
+    fb.save(ttf_path)
+    print(f"wrote {ttf_path}")
+
+    woff2 = TTFont(ttf_path)
+    woff2.flavor = "woff2"
+    woff2_path = OUT_DIR / f"{PS_NAME}.woff2"
+    woff2.save(woff2_path)
+    print(f"wrote {woff2_path}")
+
+    # --- OTF (cubic/CFF outlines) ------------------------------------------
+    fb = FontBuilder(UPM, isTTF=False)
+    fb.setupGlyphOrder(glyph_order)
+    fb.setupCharacterMap(cmap)
+    charstrings = {}
+    for name in glyph_order:
+        pen = T2CharStringPen(metrics[name][0], None)
+        glyph_paths[name].draw(pen)
+        charstrings[name] = pen.getCharString()
+    fb.setupCFF(
+        PS_NAME,
+        {"FullName": f"{FAMILY} {STYLE}", "FamilyName": FAMILY, "Weight": STYLE,
+         "Notice": COPYRIGHT},
+        charstrings,
+        {},
+    )
+    fb.setupHorizontalMetrics(metrics)
+    fb.setupHorizontalHeader(ascent=ascent, descent=descent)
+    fb.setupNameTable({
+        "copyright": COPYRIGHT,
+        "familyName": FAMILY,
+        "styleName": STYLE,
+        "uniqueFontIdentifier": f"{VERSION};{PS_NAME}",
+        "fullName": f"{FAMILY} {STYLE}",
+        "psName": PS_NAME,
+        "version": f"Version {VERSION}",
+        "licenseDescription": "SIL Open Font License, Version 1.1",
+        "licenseInfoURL": "https://openfontlicense.org",
+    })
+    fb.setupOS2(
+        sTypoAscender=ascent,
+        sTypoDescender=descent,
+        usWinAscent=ascent,
+        usWinDescent=-descent,
+        sxHeight=BASE,
+        sCapHeight=int(1.45 * BASE),
         achVendID="LQCH",
         usWeightClass=400,
     )
